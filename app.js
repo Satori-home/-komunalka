@@ -449,6 +449,12 @@ function settlementsScreen() {
 
 // ---------------- Налаштування ----------------
 
+// Застосунок з головного екрана iPhone відкриває посилання у вбудованому вікні, яке не вміє
+// передавати .ics у Календар. Схема x-safari-https:// (iOS 17+) відкриває файл у звичайному Safari.
+const standalone = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+const icsUrl = () => new URL('reminders.ics', location.href).href;
+const icsHref = () => standalone() && /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'x-safari-' + icsUrl() : 'reminders.ics';
+
 function settingsScreen() {
   const ts = tariffs().reverse();
   let h = head('Налаштування', null);
@@ -462,8 +468,11 @@ function settingsScreen() {
   h += `<div class="card" ${rise(1)}><div class="row"><span style="color:var(--light);width:24px">${ic('bell')}</span><h3 class="grow">Нагадування</h3></div>
     <div class="muted small" style="margin:8px 0 12px">На iPhone нагадування надсилає стандартний Календар — надійно, навіть коли застосунок закрито.
     Додайте дві події, що повторюються щомісяця: <b>останній день о 20:00</b> і <b>1-ше число о 09:00</b>.</div>
-    <a class="btn secondary" href="reminders.ics" target="_blank" rel="noopener" style="text-decoration:none">${ic('calendar')}Додати нагадування в Календар</a>
-    <div class="hint" style="margin-top:8px">Відкриється календар — натисніть «Додати все». Щоб змінити час: відкрийте подію → «Змінити» → «Для всіх майбутніх подій».</div></div>`;
+    <a class="btn secondary" href="${icsHref()}" ${standalone() ? '' : 'target="_blank" rel="noopener"'} style="text-decoration:none">${ic('calendar')}Додати нагадування в Календар</a>
+    <div class="hint" style="margin-top:8px">Відкриється Safari із запитом календаря — натисніть «Додати все». Щоб змінити час: відкрийте подію → «Змінити» → «Для всіх майбутніх подій».</div>
+    <div class="hint" style="margin-top:8px">Не відкрилося? Скопіюйте адресу, вставте її в Safari й натисніть «Додати все»:</div>
+    <div class="row" style="margin-top:6px"><span class="grow small ellipsis" style="color:var(--accent)">${esc(icsUrl())}</span>
+      <button class="icon-btn" style="width:auto;padding:0 12px;color:var(--text);background:var(--surface2);height:36px" data-act="copy-ics">Копіювати</button></div></div>`;
 
   h += '<div class="section-title">Тарифи</div><div class="hint" style="margin-bottom:10px">Новий тариф — з датою, з якої він діє. Старі місяці рахуються за старими.</div>';
   h += ts.map((t, i) => `<div class="card tap" data-act="edit-tariff" data-id="${t.id}" style="padding:16px"><div class="list-row"><div class="main">
@@ -480,7 +489,7 @@ function settingsScreen() {
     return `<button class="tile" data-act="heat" data-m="${m}"><div class="fill" style="height:${v * 100}%;opacity:${v ? 0.18 + 0.22 * v : 0}"></div>
       <span class="muted small">${name}</span><span class="pct" style="color:${v ? 'var(--text)' : 'var(--faint)'}">${Math.round(v * 100)}%</span></button>`;
   }).join('') + '</div>';
-  h += '<p class="faint small" style="margin-top:24px">Комуналка для iPhone 1.0 · дані зберігаються на телефоні й у вашій Google Таблиці</p>';
+  h += '<p class="faint small" style="margin-top:24px">Комуналка для iPhone 1.1 · дані зберігаються на телефоні й у вашій Google Таблиці</p>';
   return h;
 }
 
@@ -682,7 +691,11 @@ document.addEventListener('click', e => {
       if (!syncConfigured()) { toast('Вкажіть адресу і ключ'); break; }
       sync();
       break;
-    case 'tog': a.classList.toggle('on'); a.setAttribute('aria-checked', a.classList.contains('on')); break;
+    case 'copy-ics':
+      (navigator.clipboard ? navigator.clipboard.writeText(icsUrl()) : Promise.reject())
+        .then(() => toast('Адресу скопійовано — вставте її в Safari'), () => toast(icsUrl()));
+      break;
+    case 'tog':a.classList.toggle('on'); a.setAttribute('aria-checked', a.classList.contains('on')); break;
     case 'close': closeSheet(); break;
     case 'new-reading': readingEditor(null); break;
     case 'edit-reading': readingEditor(db.readings[id]); break;
