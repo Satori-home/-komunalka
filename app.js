@@ -489,7 +489,7 @@ function settingsScreen() {
     return `<button class="tile" data-act="heat" data-m="${m}"><div class="fill" style="height:${v * 100}%;opacity:${v ? 0.18 + 0.22 * v : 0}"></div>
       <span class="muted small">${name}</span><span class="pct" style="color:${v ? 'var(--text)' : 'var(--faint)'}">${Math.round(v * 100)}%</span></button>`;
   }).join('') + '</div>';
-  h += '<p class="faint small" style="margin-top:24px">Комуналка для iPhone 1.1 · дані зберігаються на телефоні й у вашій Google Таблиці</p>';
+  h += '<p class="faint small" style="margin-top:24px">Комуналка для iPhone 1.2 · дані зберігаються на телефоні й у вашій Google Таблиці</p>';
   return h;
 }
 
@@ -720,6 +720,8 @@ window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') sync(); });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+// Просимо iOS/браузер не очищати сховище застосунку, коли бракує місця.
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
 render();
 if (new URLSearchParams(location.search).has('new')) readingEditor(null);

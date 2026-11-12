@@ -1,5 +1,5 @@
 // Кешує застосунок, щоб він відкривався й без інтернету. Запити до Google-скрипта не кешуються.
-const CACHE = 'komunalka-v2';
+const CACHE = 'komunalka-v3';
 const FILES = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'reminders.ics'];
 
 self.addEventListener('install', e => {
